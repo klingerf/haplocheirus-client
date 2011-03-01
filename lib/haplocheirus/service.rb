@@ -1,5 +1,5 @@
 class Haplocheirus::Service < ThriftClient
-  DEFAULTS = { :transport_wrapper => Thrift::BufferedTransport }
+  DEFAULTS = { :transport_wrapper => Thrift::FramedTransport }
 
   class ServiceDisabled < StandardError; end
 
