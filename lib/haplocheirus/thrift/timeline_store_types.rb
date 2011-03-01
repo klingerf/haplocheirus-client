@@ -7,7 +7,7 @@
 
 module Haplocheirus
   class TimelineStoreException < ::Thrift::Exception
-    include ::Thrift::Struct
+    include ::Thrift::Struct, ::Thrift::Struct_Union
     def initialize(message=nil)
       super()
       self.description = message
@@ -17,7 +17,6 @@ module Haplocheirus
 
     DESCRIPTION = 1
 
-    ::Thrift::Struct.field_accessor self, :description
     FIELDS = {
       DESCRIPTION => {:type => ::Thrift::Types::STRING, :name => 'description'}
     }
@@ -27,16 +26,16 @@ module Haplocheirus
     def validate
     end
 
+    ::Thrift::Struct.generate_accessors self
   end
 
   class TimelineSegment
-    include ::Thrift::Struct
+    include ::Thrift::Struct, ::Thrift::Struct_Union
     ENTRIES = 1
     SIZE = 2
 
-    ::Thrift::Struct.field_accessor self, :entries, :size
     FIELDS = {
-      ENTRIES => {:type => ::Thrift::Types::LIST, :name => 'entries', :element => {:type => ::Thrift::Types::STRING}},
+      ENTRIES => {:type => ::Thrift::Types::LIST, :name => 'entries', :element => {:type => ::Thrift::Types::STRING, :binary => true}},
       SIZE => {:type => ::Thrift::Types::I32, :name => 'size'}
     }
 
@@ -45,6 +44,7 @@ module Haplocheirus
     def validate
     end
 
+    ::Thrift::Struct.generate_accessors self
   end
 
 end
