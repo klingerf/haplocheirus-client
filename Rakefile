@@ -1,21 +1,15 @@
 $LOAD_PATH.unshift File.expand_path("../lib", __FILE__)
 
-begin
-  require 'rake'
-  require 'spec/rake/spectask'
-rescue LoadError
-  require 'rubygems'
-  retry
-end
+require 'rubygems'
+require 'rspec/core/rake_task'
 
 require 'haplocheirus/version'
 
 task :default => :spec
 
 desc 'Run all specs in spec/'
-Spec::Rake::SpecTask.new(:spec) do |t|
-  t.ruby_opts += ['-Ilib', '-Ispec']
-  t.spec_files = FileList['spec/**/*_spec.rb']
+RSpec::Core::RakeTask.new do |t|
+  t.ruby_opts = ['-Ilib', '-Ispec']
 end
 
 desc 'Build the gem'
