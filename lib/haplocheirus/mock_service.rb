@@ -6,6 +6,8 @@ class Haplocheirus::MockService #:nodoc:
   end
 
   class MockNode < Struct.new(:status_id, :secondary_id, :bitfield)
+    include Comparable
+
     RETWEET_BIT = 31
 
     def self.unpack(string)
@@ -15,6 +17,10 @@ class Haplocheirus::MockService #:nodoc:
     def initialize(*args)
       super
       self.bitfield ||= 0
+    end
+
+    def <=>(other)
+      status_id <=> other.status_id
     end
 
     def is_share?
@@ -100,7 +106,7 @@ class Haplocheirus::MockService #:nodoc:
 
   def unmerge(i, e)
     return unless @timelines.key?(i)
-    @timelines[i].reject! { |i| e.include?(i) }
+    @timelines[i].reject! { |o| e.find { |el| MockNode.unpack(el) == MockNode.unpack(o) } }
   end
 
   def unmerge_indirect(d, s)
