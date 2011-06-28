@@ -74,6 +74,11 @@ describe Haplocheirus::Client do
       @client.delete '0'
       @client.get('0', 0, ARBITRARILY_LARGE_LIMIT).should be_nil
     end
+
+    it 'returns an empty set' do
+      @client.store '0', []
+      @client.get('0', 0, ARBITRARILY_LARGE_LIMIT).entries.should == []
+    end
   end
 
   describe 'range' do
@@ -122,6 +127,11 @@ describe Haplocheirus::Client do
       @client.delete '0'
       @client.range('0', 5).should be_nil
     end
+
+    it 'returns an empty set' do
+      @client.store '0', []
+      @client.range('0', 5).entries.should == []
+    end
   end
 
   describe 'store' do
@@ -143,6 +153,11 @@ describe Haplocheirus::Client do
     it 'returns nil on error' do
       @client.delete '0'
       @client.filter('0', "\003\000\000\000\000\000\000\000").should be_nil
+    end
+
+    it 'returns an empty set' do
+      @client.store '0', []
+      @client.filter('0', "\003\000\000\000\000\000\000\000").should == []
     end
   end
 
