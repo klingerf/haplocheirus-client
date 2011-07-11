@@ -46,15 +46,15 @@ class Haplocheirus::MockService #:nodoc:
       key = p + i.to_s
       next unless @timelines.key?(key)
       @timelines[key].reject! { |i| i == e }
-      @timelines.delete(key) if @timelines[key].empty?
     end
   end
 
   def get(i, o, l, d = false)
     raise Haplocheirus::TimelineStoreException unless @timelines.key?(i)
     t = @timelines[i].to_a[o..(o+l)]
+    t.sort! { |a, b| a[0,8].unpack("Q") <=> b[0,8].unpack("Q") }
     t = dedupe(t) if d
-    MockResult.new t, t.length
+    MockResult.new t.reverse, t.length
   end
 
   def get_range(i, f, t = 0, d = false)
@@ -62,8 +62,9 @@ class Haplocheirus::MockService #:nodoc:
     min = @timelines[i].index([f].pack("Q"))
     max = t > 0 ? @timelines[i].index([t].pack("Q")) : 0
     t = min ? @timelines[i][max..min-1] : @timelines[i]
+    t.sort! { |a, b| a[0,8].unpack("Q") <=> b[0,8].unpack("Q") }
     t = dedupe(t) if d
-    MockResult.new t, @timelines[i].length
+    MockResult.new t.reverse, @timelines[i].length
   end
 
   def store(i, e)
@@ -128,7 +129,8 @@ class Haplocheirus::MockService #:nodoc:
     # I can't wait until Array#uniq takes a block...
     seen = { }
     seen_secondary = { }
-    t.reverse.each do |i|
+
+    t.each do |i|
       node = MockNode.unpack(i)
 
       if node.is_share?
@@ -144,7 +146,7 @@ class Haplocheirus::MockService #:nodoc:
       end
     end
 
-    seen.values.uniq.sort { |a, b| b[0,8].unpack("Q") <=> a[0,8].unpack("Q") }
+    seen.values
   end
 
 end
