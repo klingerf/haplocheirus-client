@@ -11,37 +11,43 @@ describe Haplocheirus::Client do
 
   describe 'append' do
     it 'works' do
-      @client.store PREFIX + '0', ['bar']
-      @client.append 'foo', PREFIX, [0]
+      @client.store PREFIX + '0', ["\002\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000\000\000\000\200"]
+      @client.append "\003\000\000\000\000\000\000\000\003\000\000\000\000\000\000\000\000\000\000\000", PREFIX, [0]
 
       rval = @client.get(PREFIX + '0', 0, ARBITRARILY_LARGE_LIMIT)
-      rval.entries.should == ['foo', 'bar']
+      rval.entries.should == ["\003\000\000\000\000\000\000\000\003\000\000\000\000\000\000\000\000\000\000\000",
+                              "\002\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000\000\000\000\200"]
       rval.size.should == 2
     end
 
     it 'supports single timeline ids' do
-      @client.store PREFIX + '0', ['bar']
-      @client.append 'foo', PREFIX, 0
+      @client.store PREFIX + '0', ["\002\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000\000\000\000\200"]
+      @client.append "\003\000\000\000\000\000\000\000\003\000\000\000\000\000\000\000\000\000\000\000", PREFIX, 0
 
       rval = @client.get(PREFIX + '0', 0, ARBITRARILY_LARGE_LIMIT)
-      rval.entries.should == ['foo', 'bar']
+      rval.entries.should == ["\003\000\000\000\000\000\000\000\003\000\000\000\000\000\000\000\000\000\000\000",
+                              "\002\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000\000\000\000\200"]
+                              
       rval.size.should == 2
     end
   end
 
   describe 'remove' do
     it 'works' do
-      @client.store PREFIX + '0', ['foo']
-      @client.remove 'foo', PREFIX, [0]
-      @client.get(PREFIX + '0', 0, ARBITRARILY_LARGE_LIMIT).should be_nil
+      @client.store PREFIX + '0', ["\003\000\000\000\000\000\000\000\003\000\000\000\000\000\000\000\000\000\000\000"]
+      @client.remove "\003\000\000\000\000\000\000\000\003\000\000\000\000\000\000\000\000\000\000\000", PREFIX, [0]
+      rval = @client.get(PREFIX + '0', 0, ARBITRARILY_LARGE_LIMIT)
+      rval.entries.should == []
+      rval.size.should == 0
     end
   end
 
   describe 'get' do
     it 'works' do
-      @client.store '0', (1..20).map { |i| i.to_s }
+      vals = (1..20).map { |i| ([i]*2).pack("Q*") }
+      @client.store '0', vals
       rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
-      rval.entries.should == (1..20).map { |i| i.to_s }
+      rval.entries.should == vals.reverse
       rval.size.should == 20
     end
 
@@ -70,6 +76,14 @@ describe Haplocheirus::Client do
       @client.get('0', 0, ARBITRARILY_LARGE_LIMIT, true).entries.should == timeline[2,3]
     end
 
+    it 'sorts by recency' do
+      reversed_timeline = ["\002\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000\000\000\000\200", # retweet - dupe
+                  "\003\000\000\000\000\000\000\000\003\000\000\000\000\000\000\000\000\000\000\000", # tweet
+                  "\004\000\000\000\000\000\000\000\003\000\000\000\000\000\000\000\000\000\000\200"] # retweet - not a dupe
+      @client.store '0', reversed_timeline
+      @client.get('0', 0, ARBITRARILY_LARGE_LIMIT, true).entries.should == reversed_timeline[0,2].reverse
+    end
+    
     it 'returns nil on error' do
       @client.delete '0'
       @client.get('0', 0, ARBITRARILY_LARGE_LIMIT).should be_nil
