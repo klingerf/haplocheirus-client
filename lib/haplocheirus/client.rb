@@ -103,7 +103,7 @@ class Haplocheirus::Client
     # FIXME: Expose max search depth
     @service.filter timeline_id, entries.flatten, -1
   rescue Haplocheirus::TimelineStoreException
-    nil
+    []
   end
 
   # Merges the entries into the timeline given by timeline_id. Merges
