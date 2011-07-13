@@ -128,25 +128,25 @@ class Haplocheirus::MockService #:nodoc:
   def dedupe(t)
     # I can't wait until Array#uniq takes a block...
     seen = { }
-    seen_secondary = { }
+    nodes = []
 
     t.each do |i|
       node = MockNode.unpack(i)
-
+      next if seen.key?(node.status_id)
+      
       if node.is_share?
-        next if seen.key?(node.status_id) ||
-          seen.key?(node.secondary_id) ||
-          seen_secondary.key?(node.secondary_id)
+        next if seen.key?(node.secondary_id)
 
         seen[node.status_id] = i
-        seen_secondary[node.secondary_id] = i
+        seen[node.secondary_id] = true
+        nodes << node.status_id
       else
-        next if seen.key?(node.status_id)
         seen[node.status_id] = i
+        nodes << node.status_id
       end
     end
 
-    seen.values
+    seen.values_at(*nodes.sort!)
   end
 
 end
