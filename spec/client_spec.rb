@@ -5,11 +5,13 @@ describe Haplocheirus::Client do
   ARBITRARILY_LARGE_LIMIT = 100
   PREFIX = 'timeline:'
 
-  TWEET     = "\003\000\000\000\000\000\000\000\003\000\000\000\000\000\000\000\000\000\000\000"
+  TWEET_1   = "\001\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000\000\000\000\000"
   RETWEET_1 = "\002\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000\000\000\000\200"
+  TWEET_3   = "\003\000\000\000\000\000\000\000\003\000\000\000\000\000\000\000\000\000\000\000"
   RETWEET_3 = "\004\000\000\000\000\000\000\000\003\000\000\000\000\000\000\000\000\000\000\200"
-  DUPE_1    = "\006\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000\000\000\000\200"
   DUPE_3    = "\005\000\000\000\000\000\000\000\003\000\000\000\000\000\000\000\000\000\000\200"
+  DUPE_1    = "\006\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000\000\000\000\200"
+  TWEET_7   = "\007\000\000\000\000\000\000\000\007\000\000\000\000\000\000\000\000\000\000\000"
   
   before(:each) do
     @client  = Haplocheirus::Client.new(Haplocheirus::MockService.new)
@@ -18,19 +20,19 @@ describe Haplocheirus::Client do
   describe 'append' do
     it 'works' do
       @client.store PREFIX + '0', [RETWEET_1]
-      @client.append TWEET, PREFIX, [0]
+      @client.append TWEET_3, PREFIX, [0]
 
       rval = @client.get(PREFIX + '0', 0, ARBITRARILY_LARGE_LIMIT)
-      rval.entries.should == [TWEET, RETWEET_1]
+      rval.entries.should == [TWEET_3, RETWEET_1]
       rval.size.should == 2
     end
 
     it 'supports single timeline ids' do
       @client.store PREFIX + '0', [RETWEET_1]
-      @client.append TWEET, PREFIX, 0
+      @client.append TWEET_3, PREFIX, 0
 
       rval = @client.get(PREFIX + '0', 0, ARBITRARILY_LARGE_LIMIT)
-      rval.entries.should == [TWEET, RETWEET_1]
+      rval.entries.should == [TWEET_3, RETWEET_1]
                               
       rval.size.should == 2
     end
@@ -38,8 +40,8 @@ describe Haplocheirus::Client do
 
   describe 'remove' do
     it 'works' do
-      @client.store PREFIX + '0', [TWEET]
-      @client.remove TWEET, PREFIX, [0]
+      @client.store PREFIX + '0', [TWEET_3]
+      @client.remove TWEET_3, PREFIX, [0]
       rval = @client.get(PREFIX + '0', 0, ARBITRARILY_LARGE_LIMIT)
       rval.entries.should == []
       rval.size.should == 0
@@ -56,13 +58,13 @@ describe Haplocheirus::Client do
     end
 
     it 'does not dedupe by default' do
-      timeline = [RETWEET_3, TWEET, RETWEET_1] 
+      timeline = [RETWEET_3,TWEET_3, RETWEET_1] 
       @client.store '0', timeline
       @client.get('0', 0, ARBITRARILY_LARGE_LIMIT).entries.should == timeline
     end
 
     it 'dedupes with source present' do
-      timeline = [RETWEET_3, TWEET, RETWEET_1]
+      timeline = [RETWEET_3,TWEET_3, RETWEET_1]
       @client.store '0', timeline
       @client.get('0', 0, ARBITRARILY_LARGE_LIMIT, true).entries.should == timeline[1,2]
     end
@@ -74,7 +76,7 @@ describe Haplocheirus::Client do
     end
 
     it 'sorts by recency' do
-      reversed_timeline = [RETWEET_1, TWEET, RETWEET_3]
+      reversed_timeline = [RETWEET_1,TWEET_3, RETWEET_3]
       @client.store '0', reversed_timeline
       @client.get('0', 0, ARBITRARILY_LARGE_LIMIT, true).entries.should == reversed_timeline[0,2].reverse
     end
@@ -106,13 +108,13 @@ describe Haplocheirus::Client do
     end
 
     it 'does not dedupe by default' do
-      timeline = [RETWEET_3, TWEET, RETWEET_1]
+      timeline = [RETWEET_3,TWEET_3, RETWEET_1]
       @client.store '0', timeline
       @client.range('0', 0, 10).entries.should == timeline
     end
 
     it 'dedupes with source present' do
-      timeline = [RETWEET_3, TWEET, RETWEET_1]
+      timeline = [RETWEET_3,TWEET_3, RETWEET_1]
       @client.store '0', timeline
       @client.range('0', 0, 10, true).entries.should == timeline[1,2]
     end
@@ -147,45 +149,41 @@ describe Haplocheirus::Client do
 
   describe 'filter' do
     it 'works' do
-      @client.store '0', ["\003\000\000\000\000\000\000\000", "\002\000\000\000\000\000\000\000"]
-      @client.filter('0', "\003\000\000\000\000\000\000\000").should == ["\003\000\000\000\000\000\000\000"]
-      @client.filter('0', ["\003\000\000\000\000\000\000\000"]).should == ["\003\000\000\000\000\000\000\000"]
+      @client.store '0', [TWEET_3, TWEET_1]
+      @client.filter('0', TWEET_3).should == [TWEET_3]
+      @client.filter('0', [TWEET_3]).should == [TWEET_3]
     end
 
     it 'returns [] on error' do
       @client.delete '0'
-      @client.filter('0', "\003\000\000\000\000\000\000\000").should == []
+      @client.filter('0', TWEET_3).should == []
     end
 
     it 'returns an empty set' do
       @client.store '0', []
-      @client.filter('0', "\003\000\000\000\000\000\000\000").should == []
+      @client.filter('0', TWEET_3).should == []
     end
   end
 
   describe 'merge' do
     it 'works' do
-      @client.store '0', ["\003\000\000\000\000\000\000\000", "\001\000\000\000\000\000\000\000"]
-      @client.merge '0', ["\002\000\000\000\000\000\000\000"]
+      @client.store '0', [TWEET_7, TWEET_1]
+      @client.merge '0', [TWEET_3]
 
       rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
-      rval.entries.should == ["\003\000\000\000\000\000\000\000",
-                              "\002\000\000\000\000\000\000\000",
-                              "\001\000\000\000\000\000\000\000"]
+      rval.entries.should == [TWEET_7, TWEET_3, TWEET_1]
       rval.size.should == 3
     end
   end
 
   describe 'merge_indirect' do
     it 'works' do
-      @client.store '0', ["\003\000\000\000\000\000\000\000", "\001\000\000\000\000\000\000\000"]
-      @client.store '1', ["\002\000\000\000\000\000\000\000"]
+      @client.store '0', [TWEET_7, TWEET_1]
+      @client.store '1', [TWEET_3]
       @client.merge_indirect '0', '1'
 
       rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
-      rval.entries.should == ["\003\000\000\000\000\000\000\000",
-                              "\002\000\000\000\000\000\000\000",
-                              "\001\000\000\000\000\000\000\000"]
+      rval.entries.should == [TWEET_7, TWEET_3, TWEET_1]
       rval.size.should == 3
     end
 
@@ -202,25 +200,23 @@ describe Haplocheirus::Client do
 
   describe 'unmerge' do
     it 'works' do
-      @client.store '0', ["\003\000\000\000\000\000\000\000", "\002\000\000\000\000\000\000\000",
-                          "\001\000\000\000\000\000\000\000"]
-      @client.unmerge('0', ["\002\000\000\000\000\000\000\000"])
+      @client.store '0', [TWEET_7, TWEET_3, TWEET_1]
+      @client.unmerge('0', [TWEET_3])
 
       rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
-      rval.entries.should == ["\003\000\000\000\000\000\000\000", "\001\000\000\000\000\000\000\000"]
+      rval.entries.should == [TWEET_7, TWEET_1]
       rval.size.should == 2
     end
   end
 
   describe 'unmerge_indirect' do
     it 'works' do
-      @client.store '0', ["\003\000\000\000\000\000\000\000", "\002\000\000\000\000\000\000\000",
-                          "\001\000\000\000\000\000\000\000"]
-      @client.store '1', ["\002\000\000\000\000\000\000\000"]
+      @client.store '0', [TWEET_7, TWEET_3, TWEET_1]
+      @client.store '1', [TWEET_3]
       @client.unmerge_indirect '0', '1'
 
       rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
-      rval.entries.should == ["\003\000\000\000\000\000\000\000", "\001\000\000\000\000\000\000\000"]
+      rval.entries.should == [TWEET_7, TWEET_1]
       rval.size.should == 2
     end
 
