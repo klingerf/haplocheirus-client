@@ -1,8 +1,5 @@
-begin
-  require 'spec'
-rescue LoadError
-  require 'rubygems'
-  retry
+RSpec.configure do |c|
+  c.mock_with :rspec
 end
 
 require 'haplocheirus'
