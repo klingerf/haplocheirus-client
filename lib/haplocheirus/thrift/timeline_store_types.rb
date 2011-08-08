@@ -6,6 +6,14 @@
 
 
 module Haplocheirus
+  module TimelineSegmentState
+    HIT = 0
+    MISS = 1
+    TIMEOUT = 2
+    VALUE_MAP = {0 => "HIT", 1 => "MISS", 2 => "TIMEOUT"}
+    VALID_VALUES = Set.new([HIT, MISS, TIMEOUT]).freeze
+  end
+
   class TimelineStoreException < ::Thrift::Exception
     include ::Thrift::Struct
     def initialize(message=nil)
@@ -33,11 +41,58 @@ module Haplocheirus
     include ::Thrift::Struct
     ENTRIES = 1
     SIZE = 2
+    STATE = 3
 
-    ::Thrift::Struct.field_accessor self, :entries, :size
+    ::Thrift::Struct.field_accessor self, :entries, :size, :state
     FIELDS = {
       ENTRIES => {:type => ::Thrift::Types::LIST, :name => 'entries', :element => {:type => ::Thrift::Types::STRING}},
-      SIZE => {:type => ::Thrift::Types::I32, :name => 'size'}
+      SIZE => {:type => ::Thrift::Types::I32, :name => 'size'},
+      STATE => {:type => ::Thrift::Types::I32, :name => 'state', :default =>         0, :optional => true, :enum_class => Haplocheirus::TimelineSegmentState}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+      unless @state.nil? || Haplocheirus::TimelineSegmentState::VALID_VALUES.include?(@state)
+        raise ::Thrift::ProtocolException.new(::Thrift::ProtocolException::UNKNOWN, 'Invalid value of field state!')
+      end
+    end
+  end
+
+  class TimelineGet
+    include ::Thrift::Struct
+    TIMELINE_ID = 1
+    OFFSET = 2
+    LENGTH = 3
+    DEDUPE = 4
+
+    ::Thrift::Struct.field_accessor self, :timeline_id, :offset, :length, :dedupe
+    FIELDS = {
+      TIMELINE_ID => {:type => ::Thrift::Types::STRING, :name => 'timeline_id'},
+      OFFSET => {:type => ::Thrift::Types::I32, :name => 'offset'},
+      LENGTH => {:type => ::Thrift::Types::I32, :name => 'length'},
+      DEDUPE => {:type => ::Thrift::Types::BOOL, :name => 'dedupe', :default => false, :optional => true}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+  end
+
+  class TimelineGetRange
+    include ::Thrift::Struct
+    TIMELINE_ID = 1
+    FROM_ID = 2
+    TO_ID = 3
+    DEDUPE = 4
+
+    ::Thrift::Struct.field_accessor self, :timeline_id, :from_id, :to_id, :dedupe
+    FIELDS = {
+      TIMELINE_ID => {:type => ::Thrift::Types::STRING, :name => 'timeline_id'},
+      FROM_ID => {:type => ::Thrift::Types::I64, :name => 'from_id'},
+      TO_ID => {:type => ::Thrift::Types::I64, :name => 'to_id'},
+      DEDUPE => {:type => ::Thrift::Types::BOOL, :name => 'dedupe', :default => false, :optional => true}
     }
 
     def struct_fields; FIELDS; end

@@ -56,6 +56,20 @@ class Haplocheirus::Client
     nil
   end
 
+  # ==== Parameters
+  # timeline_queries<Array[TimelineQuery]>:: list of query structs
+  #
+  # ==== Returns
+  # Array[TimelineSegment]
+  #
+  # NOTE: Because there is no identifying information in the returned
+  # TimelineSegments, there is a strict ordering relationship between
+  # the query and returned segment lists.
+  #
+  def get_multi(timeline_queries)
+    @service.get_multi timeline_queries
+  end
+  
   # Gets a range of entries from the timeline given by timeline_id
   # since from_id (exclusive). This may include entries that were inserted out
   # of order. from_id and to_id are treated as a 8 byte prefixes. If
