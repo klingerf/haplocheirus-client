@@ -2,9 +2,6 @@ require 'set'
 
 class Haplocheirus::MockService #:nodoc:
 
-  class MockResult < Struct.new(:entries, :size)
-  end
-
   class MockNode < Struct.new(:status_id, :secondary_id, :bitfield)
     include Comparable
 
@@ -46,6 +43,7 @@ class Haplocheirus::MockService #:nodoc:
       key = p + i.to_s
       next unless @timelines.key?(key)
       @timelines[key].reject! { |i| i == e }
+      @timelines.delete(key) if @timelines[key].empty?
     end
   end
 
@@ -54,9 +52,23 @@ class Haplocheirus::MockService #:nodoc:
     t = @timelines[i].to_a[o..(o+l)]
     t.sort! { |a, b| a[0,8].unpack("Q") <=> b[0,8].unpack("Q") }
     t = dedupe(t) if d
-    MockResult.new t.reverse, t.length
+    Haplocheirus::TimelineSegment.new(:entries => t.reverse,
+                                      :size => t.length,
+                                      :state => Haplocheirus::TimelineSegmentState::HIT)
   end
 
+  def get_multi(qs)
+    qs.map do |q|
+      begin
+        get q.timeline_id, q.offset, q.length, q.dedupe
+      rescue Haplocheirus::TimelineStoreException
+        Haplocheirus::TimelineSegment.new(:entries => [],
+                                          :size => 0,
+                                          :state => Haplocheirus::TimelineSegmentState::MISS)
+      end
+    end
+  end
+  
   def get_range(i, f, t = 0, d = false)
     raise Haplocheirus::TimelineStoreException unless @timelines.key?(i)
     min = @timelines[i].index([f].pack("Q"))
@@ -64,7 +76,9 @@ class Haplocheirus::MockService #:nodoc:
     t = min ? @timelines[i][max..min-1] : @timelines[i]
     t.sort! { |a, b| a[0,8].unpack("Q") <=> b[0,8].unpack("Q") }
     t = dedupe(t) if d
-    MockResult.new t.reverse, @timelines[i].length
+    Haplocheirus::TimelineSegment.new(:entries => t.reverse,
+                                      :size => @timelines[i].length,
+                                      :state => Haplocheirus::TimelineSegmentState::HIT)
   end
 
   def store(i, e)

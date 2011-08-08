@@ -20,4 +20,21 @@ module Haplocheirus
     nil
   end
 
+  # Nice-to-haves...
+  class TimelineSegment #:nodoc:
+
+    def hit?
+      state == TimelineSegmentState::HIT
+    end
+
+    def miss?
+      state == TimelineSegmentState::MISS
+    end
+
+    def timeout?
+      state == TimelineSegmentState::TIMEOUT
+    end
+
+  end
+
 end

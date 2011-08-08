@@ -90,6 +90,21 @@ module Haplocheirus
         raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'get failed: unknown result')
       end
 
+      def get_multi(gets)
+        send_get_multi(gets)
+        return recv_get_multi()
+      end
+
+      def send_get_multi(gets)
+        send_message('get_multi', Get_multi_args, :gets => gets)
+      end
+
+      def recv_get_multi()
+        result = receive_message(Get_multi_result)
+        return result.success unless result.success.nil?
+        raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'get_multi failed: unknown result')
+      end
+
       def get_range(timeline_id, from_id, to_id, dedupe)
         send_get_range(timeline_id, from_id, to_id, dedupe)
         return recv_get_range()
@@ -104,6 +119,21 @@ module Haplocheirus
         return result.success unless result.success.nil?
         raise result.ex unless result.ex.nil?
         raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'get_range failed: unknown result')
+      end
+
+      def get_range_multi(get_ranges)
+        send_get_range_multi(get_ranges)
+        return recv_get_range_multi()
+      end
+
+      def send_get_range_multi(get_ranges)
+        send_message('get_range_multi', Get_range_multi_args, :get_ranges => get_ranges)
+      end
+
+      def recv_get_range_multi()
+        result = receive_message(Get_range_multi_result)
+        return result.success unless result.success.nil?
+        raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'get_range_multi failed: unknown result')
       end
 
       def store(timeline_id, entries)
@@ -258,6 +288,13 @@ module Haplocheirus
         write_result(result, oprot, 'get', seqid)
       end
 
+      def process_get_multi(seqid, iprot, oprot)
+        args = read_args(iprot, Get_multi_args)
+        result = Get_multi_result.new()
+        result.success = @handler.get_multi(args.gets)
+        write_result(result, oprot, 'get_multi', seqid)
+      end
+
       def process_get_range(seqid, iprot, oprot)
         args = read_args(iprot, Get_range_args)
         result = Get_range_result.new()
@@ -267,6 +304,13 @@ module Haplocheirus
           result.ex = ex
         end
         write_result(result, oprot, 'get_range', seqid)
+      end
+
+      def process_get_range_multi(seqid, iprot, oprot)
+        args = read_args(iprot, Get_range_multi_args)
+        result = Get_range_multi_result.new()
+        result.success = @handler.get_range_multi(args.get_ranges)
+        write_result(result, oprot, 'get_range_multi', seqid)
       end
 
       def process_store(seqid, iprot, oprot)
@@ -527,6 +571,38 @@ module Haplocheirus
       ::Thrift::Struct.generate_accessors self
     end
 
+    class Get_multi_args
+      include ::Thrift::Struct, ::Thrift::Struct_Union
+      GETS = 1
+
+      FIELDS = {
+        GETS => {:type => ::Thrift::Types::LIST, :name => 'gets', :element => {:type => ::Thrift::Types::STRUCT, :class => Haplocheirus::TimelineGet}}
+      }
+
+      def struct_fields; FIELDS; end
+
+      def validate
+      end
+
+      ::Thrift::Struct.generate_accessors self
+    end
+
+    class Get_multi_result
+      include ::Thrift::Struct, ::Thrift::Struct_Union
+      SUCCESS = 0
+
+      FIELDS = {
+        SUCCESS => {:type => ::Thrift::Types::LIST, :name => 'success', :element => {:type => ::Thrift::Types::STRUCT, :class => Haplocheirus::TimelineSegment}}
+      }
+
+      def struct_fields; FIELDS; end
+
+      def validate
+      end
+
+      ::Thrift::Struct.generate_accessors self
+    end
+
     class Get_range_args
       include ::Thrift::Struct, ::Thrift::Struct_Union
       TIMELINE_ID = 1
@@ -557,6 +633,38 @@ module Haplocheirus
       FIELDS = {
         SUCCESS => {:type => ::Thrift::Types::STRUCT, :name => 'success', :class => Haplocheirus::TimelineSegment},
         EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => Haplocheirus::TimelineStoreException}
+      }
+
+      def struct_fields; FIELDS; end
+
+      def validate
+      end
+
+      ::Thrift::Struct.generate_accessors self
+    end
+
+    class Get_range_multi_args
+      include ::Thrift::Struct, ::Thrift::Struct_Union
+      GET_RANGES = 1
+
+      FIELDS = {
+        GET_RANGES => {:type => ::Thrift::Types::LIST, :name => 'get_ranges', :element => {:type => ::Thrift::Types::STRUCT, :class => Haplocheirus::TimelineGetRange}}
+      }
+
+      def struct_fields; FIELDS; end
+
+      def validate
+      end
+
+      ::Thrift::Struct.generate_accessors self
+    end
+
+    class Get_range_multi_result
+      include ::Thrift::Struct, ::Thrift::Struct_Union
+      SUCCESS = 0
+
+      FIELDS = {
+        SUCCESS => {:type => ::Thrift::Types::LIST, :name => 'success', :element => {:type => ::Thrift::Types::STRUCT, :class => Haplocheirus::TimelineSegment}}
       }
 
       def struct_fields; FIELDS; end
