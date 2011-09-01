@@ -52,7 +52,7 @@ class Haplocheirus::MockService #:nodoc:
     t = @timelines[i].to_a[o..(o+l)]
     t.sort! { |a, b| a[0,8].unpack("Q") <=> b[0,8].unpack("Q") }
     t = dedupe(t) if d
-    Haplocheirus::TimelineSegment.new(:entries => t.reverse,
+    Haplocheirus::TimelineSegment.new(:entries => t.reverse.map{ |tt| tt.dup },
                                       :size => t.length,
                                       :state => Haplocheirus::TimelineSegmentState::HIT)
   end
