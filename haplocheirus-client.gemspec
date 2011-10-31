@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = ">= 1.3.5"
 
-  s.add_runtime_dependency 'thrift', '~> 0.5.0'
+  s.add_runtime_dependency 'thrift', '~> 0.6.0'
   s.add_runtime_dependency 'thrift_client', '~> 0.6.0'
 
   s.add_development_dependency 'rspec', '~> 2.5.0'
